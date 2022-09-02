@@ -1341,8 +1341,15 @@ EOL
             mock(sock).close.once; sock
           }.twice
 
+          ack_thread_created = false
+          mock.proxy(d.instance).ack_check(anything) do
+            ack_thread_created = true
+          end.at_least(1)
+
           target_input_driver.run(timeout: 15) do
             d.run(shutdown: false) do
+              sleep 0.1 until ack_thread_created
+
               node = d.instance.nodes.first
               2.times do
                 node.send_data('test', chunk) rescue nil
